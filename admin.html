@@ -1,0 +1,883 @@
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AIXA | Admin</title>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+
+<style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial;}
+
+body{display:flex;height:100vh;background:#f4f4f4;}
+
+
+
+.sidebar{
+
+  width:240px;
+
+  background:#000;
+
+  color:#fff;
+
+  padding:20px;
+
+  display:flex;
+
+  flex-direction:column;
+
+}
+
+.sidebar h2{margin-bottom:30px;text-align:center;}
+
+.sidebar button{
+
+  background:none;border:none;color:white;
+
+  text-align:left;padding:12px;margin-bottom:10px;
+
+  cursor:pointer;border-radius:6px;
+
+}
+
+.sidebar button:hover{background:#222;}
+
+.sidebar button.active{background:#333;}
+
+
+
+.main{flex:1;padding:25px;overflow-y:auto;}
+
+
+
+.section{display:none;}
+
+.section.active{display:block;}
+
+
+
+.card{
+
+  background:white;
+
+  padding:20px;
+
+  border-radius:12px;
+
+  margin-bottom:20px;
+
+  box-shadow:0 3px 10px rgba(0,0,0,0.05);
+
+}
+
+
+
+input, textarea, select{
+
+  width:100%;
+
+  padding:10px;
+
+  margin:8px 0;
+
+  border:1px solid #ccc;
+
+  border-radius:6px;
+
+}
+
+
+
+button.primary{
+
+  background:black;color:white;
+
+  padding:10px;border:none;border-radius:6px;cursor:pointer;
+
+}
+
+
+
+button.red{background:red;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;}
+
+button.green{background:green;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;}
+
+
+
+table{
+
+  width:100%;
+
+  border-collapse:collapse;
+
+  background:white;
+
+}
+
+th, td{
+
+  padding:12px;
+
+  border-bottom:1px solid #eee;
+
+}
+
+th{background:#f0f0f0;}
+
+
+
+img.thumb{width:50px;height:50px;object-fit:cover;border-radius:6px;}
+
+
+
+#toast{
+
+  position:fixed;
+
+  bottom:20px;
+
+  right:20px;
+
+  background:black;
+
+  color:white;
+
+  padding:14px 20px;
+
+  border-radius:8px;
+
+  opacity:0;
+
+  transform:translateY(20px);
+
+  transition:0.3s;
+
+}
+
+#toast.show{
+
+  opacity:1;
+
+  transform:translateY(0);
+
+}
+  
+  /* Make tables scrollable on mobile */
+.table-container{
+  width:100%;
+  overflow-x:auto;
+}
+
+/* Make table responsive */
+table{
+  min-width:700px;
+}
+  
+  /* ================= MOBILE RESPONSIVE ================= */
+
+@media(max-width:768px){
+
+  body{
+    flex-direction:column;
+    height:auto;
+  }
+
+  .sidebar{
+    width:100%;
+    flex-direction:row;
+    overflow-x:auto;
+    padding:10px;
+  }
+
+  .sidebar h2{
+    display:none;
+  }
+
+  .sidebar button{
+    flex:1;
+    font-size:14px;
+    padding:10px;
+    text-align:center;
+    white-space:nowrap;
+  }
+
+  .main{
+    padding:15px;
+  }
+
+  .card{
+    padding:15px;
+  }
+
+  button{
+    font-size:14px;
+    padding:8px;
+  }
+}
+
+</style>
+
+</head>
+
+<body>
+
+
+
+<div class="sidebar">
+
+  <h2>AIXA ADMIN</h2>
+
+  <button onclick="showSection(event,'dashboard')" class="active">Dashboard</button>
+
+  <button onclick="showSection(event,'orders')">Orders</button>
+
+  <button onclick="showSection(event,'products')">Products</button>
+
+  <button onclick="showSection(event,'addProduct')">Add Product</button>
+
+  <button onclick="logout()">Logout</button>
+
+</div>
+
+
+
+<div class="main">
+
+
+
+<div id="dashboard" class="section active">
+
+  <div class="card">Total Products: <b id="totalProducts">0</b></div>
+
+  <div class="card">Total Orders: <b id="totalOrders">0</b></div>
+
+  <div class="card">Total Revenue: ₹<b id="totalRevenue">0</b></div>
+
+  <div class="card">
+
+    <canvas id="revenueChart"></canvas>
+
+  </div>
+
+</div>
+
+
+
+<div id="orders" class="section">
+  <h2>Orders</h2>
+
+  <div class="table-container">
+    <table>
+
+    <thead>
+
+      <tr>
+
+        <th>User</th>
+
+        <th>Total</th>
+
+        <th>Status</th>
+
+        <th>Delivery</th>
+
+        <th>Action</th>
+
+      </tr>
+
+    </thead>
+
+    <tbody id="ordersTable"></tbody>
+
+  </table>
+  </div>
+
+</div>
+
+
+<div id="products" class="section">
+  <h2>Products</h2>
+
+  <div class="table-container">
+    <table>
+
+    <thead>
+
+      <tr>
+
+        <th>Image</th>
+
+        <th>Name</th>
+
+        <th>Price</th>
+
+        <th>Stock</th>
+
+        <th>Delete</th>
+
+      </tr>
+
+    </thead>
+
+    <tbody id="productTable"></tbody>
+
+  </table>
+  </div>
+
+</div>
+
+
+
+<div id="addProduct" class="section">
+
+  <h2>Add Product</h2>
+
+  <input id="name" placeholder="Product Name">
+
+  <textarea id="desc" placeholder="Description"></textarea>
+
+  <input id="price" type="number" placeholder="Price">
+
+  <input id="stock" type="number" placeholder="Stock">
+
+
+
+  <select id="category">
+
+    <option value="">Select Category</option>
+
+    <option>Shirts</option>
+
+    <option>Pants</option>
+
+    <option>Tshirts</option>
+
+    <option>Accessories</option>
+
+  </select>
+
+
+
+  <input id="img1" placeholder="Image 1 URL">
+
+  <input id="img2" placeholder="Image 2 URL">
+
+  <input id="img3" placeholder="Image 3 URL">
+
+  <input id="img4" placeholder="Image 4 URL">
+
+  <input id="img5" placeholder="Image 5 URL">
+
+
+
+  <button class="primary" onclick="addProduct()">Add Product</button>
+
+</div>
+
+
+
+</div>
+
+
+
+<div id="toast"></div>
+  
+  <!-- SHIPPING MODAL -->
+<div id="shipModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+
+  <div style="background:white; padding:20px; border-radius:10px; width:300px; display:flex; flex-direction:column; gap:10px;">
+
+    <h3>Shipping Details</h3>
+
+    <label>Shipped Date</label>
+    <input type="date" id="shipDate">
+
+    <label>Expected Delivery</label>
+    <input type="date" id="expectedDate">
+
+    <button class="green" onclick="confirmShip()">Confirm</button>
+    <button class="red" onclick="closeShipModal()">Cancel</button>
+
+  </div>
+
+</div>
+
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { 
+  getFirestore, 
+  collection, 
+  addDoc, 
+  getDocs, 
+  getDoc, 
+  deleteDoc, 
+  doc, 
+  updateDoc,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+
+
+
+const firebaseConfig = {
+
+  apiKey: "AIzaSyCrnSZiYKQtWhnz4cNKdjBo0lWuQGYuimI",
+
+  authDomain: "aixa-store.firebaseapp.com",
+
+  projectId: "aixa-store",
+
+  storageBucket: "aixa-store.appspot.com",
+
+  messagingSenderId: "950338552111",
+
+  appId: "1:950338552111:web:2bd549406709e48d47a1da"
+
+};
+
+
+
+const app = initializeApp(firebaseConfig);
+
+const auth = getAuth(app);
+
+const db = getFirestore(app);
+
+
+
+let chartInstance = null;
+
+
+
+/* AUTH */
+
+onAuthStateChanged(auth,user=>{
+
+  if(!user || user.email!=="aixa.hqs@gmail.com"){
+
+    window.location="login.html";
+
+  }
+
+});
+
+
+
+/* SIDEBAR */
+
+window.showSection = function(e,id){
+
+  document.querySelectorAll(".sidebar button").forEach(btn=>btn.classList.remove("active"));
+
+  e.target.classList.add("active");
+
+
+
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+
+  document.getElementById(id).classList.add("active");
+
+}
+
+
+
+/* LOGOUT */
+
+window.logout = function(){
+
+  signOut(auth).then(()=>window.location="login.html");
+
+}
+
+
+
+/* TOAST */
+
+function toast(msg){
+
+  const t=document.getElementById("toast");
+
+  t.innerText=msg;
+
+  t.classList.add("show");
+
+  setTimeout(()=>t.classList.remove("show"),3000);
+
+}
+
+
+
+/* ADD PRODUCT */
+
+window.addProduct = async function(){
+
+  try{
+
+
+
+    const nameVal = document.getElementById("name").value.trim();
+
+    const descVal = document.getElementById("desc").value.trim();
+
+    const priceVal = document.getElementById("price").value.trim();
+
+    const stockVal = document.getElementById("stock").value.trim();
+
+    const categoryVal = document.getElementById("category").value;
+
+
+
+    if(nameVal === "" || priceVal === "" || categoryVal === ""){
+
+      toast("Fill required fields");
+
+      return;
+
+    }
+
+
+
+    await addDoc(collection(db,"Products"),{
+  name: nameVal,
+  description: descVal,
+  price: Number(priceVal),
+  stock: Number(stockVal),
+  category: categoryVal,
+
+  image1: document.getElementById("img1").value.trim(),
+  image2: document.getElementById("img2").value.trim(),
+  image3: document.getElementById("img3").value.trim(),
+  image4: document.getElementById("img4").value.trim(),
+  image5: document.getElementById("img5").value.trim(),
+
+  createdAt: new Date()
+});
+
+
+    toast("Product Added Successfully");
+
+
+
+    // Clear form
+
+    document.querySelectorAll("#addProduct input, #addProduct textarea").forEach(i=>i.value="");
+
+    document.getElementById("category").value="";
+
+
+
+    loadProducts();
+
+
+
+  }catch(err){
+
+    console.error(err);
+
+    toast("Error adding product");
+
+  }
+
+}
+
+
+
+/* LOAD PRODUCTS */
+
+async function loadProducts(){
+
+  const snap=await getDocs(collection(db,"Products"));
+
+  productTable.innerHTML="";
+
+  totalProducts.innerText=snap.size;
+
+
+
+  snap.forEach(d=>{
+
+    const data=d.data();
+
+    productTable.innerHTML+=`
+<tr>
+  <td><img src="${data.image1 || ''}" class="thumb"></td>
+  <td>${data.name}</td>
+  <td>₹${data.price}</td>
+  <td>${data.stock}</td>
+  <td><button class="red" onclick="deleteProduct('${d.id}')">Delete</button></td>
+</tr>`;
+  });
+
+}
+
+
+
+/* DELETE */
+
+window.deleteProduct = async function(id){
+
+  await deleteDoc(doc(db,"Products",id));
+
+  toast("Product Deleted");
+
+  loadProducts();
+
+}
+
+
+
+/* LOAD ORDERS */
+
+async function loadOrders(){
+
+  const q = query(
+  collection(db,"Orders"),
+  orderBy("createdAt","desc")
+);
+
+const snap = await getDocs(q);
+
+  ordersTable.innerHTML="";
+
+  totalOrders.innerText=snap.size;
+
+
+
+  let revenue=0;
+
+
+
+  snap.forEach(d=>{
+
+    const data=d.data();
+
+    if(data.status==="Delivered" || data.status==="Shipped"){
+
+      revenue += data.total || 0;
+
+    }
+
+let actionButtons = "";
+
+// 🔴 If user requested cancel → admin must approve
+if(data.cancelRequest === true){
+  actionButtons = `
+    <button class="red" onclick="approveCancel('${d.id}')">
+      Approve Cancel
+    </button>
+  `;
+}
+
+else if(data.status === "Processing"){
+  actionButtons = `
+    <button class="green" onclick="ship('${d.id}')">Ship</button>
+    <button class="red" onclick="cancel('${d.id}')">Cancel</button>
+  `;
+}
+
+else if(data.status === "Shipped"){
+  actionButtons = `
+    <button style="background:#007bff;color:white;border:none;padding:6px 10px;border-radius:6px;cursor:pointer;"
+            onclick="deliver('${d.id}')">
+      Delivered
+    </button>
+  `;
+}
+
+else{
+  actionButtons = "-";
+}
+
+   ordersTable.innerHTML+=`
+<tr>
+  <td>${data.userEmail}</td>
+  <td>₹${data.total}</td>
+  <td>${data.status}</td>
+  <td>${data.expectedDelivery || "-"}</td>
+  <td>${actionButtons}</td>
+</tr>`;
+
+  });
+
+
+
+  totalRevenue.innerText=revenue;
+
+  createChart(revenue);
+
+}
+
+/* SHIP */
+
+let currentOrderId = null;
+
+/* OPEN MODAL */
+window.ship = function(id){
+  currentOrderId = id;
+  document.getElementById("shipModal").style.display = "flex";
+}
+
+/* CLOSE MODAL */
+window.closeShipModal = function(){
+  document.getElementById("shipModal").style.display = "none";
+}
+
+/* CONFIRM SHIPPING */
+window.confirmShip = async function(){
+
+  const shipDate = document.getElementById("shipDate").value;
+  const expectedDate = document.getElementById("expectedDate").value;
+
+  if(!shipDate || !expectedDate){
+    alert("Please select both dates");
+    return;
+  }
+
+  await updateDoc(doc(db,"Orders",currentOrderId),{
+    status:"Shipped",
+    shippedDate: shipDate,
+    expectedDelivery: expectedDate
+  });
+
+  toast("Order Shipped");
+
+  closeShipModal();
+  loadOrders();
+}
+
+
+
+/* CANCEL */
+
+window.cancel = async function(id){
+
+  await updateDoc(doc(db,"Orders",id),{status:"Cancelled"});
+
+  toast("Order Cancelled");
+
+  loadOrders();
+
+}
+
+  let currentDeliverOrderId = null;
+
+// OPEN DELIVER MODAL
+window.deliver = function(id){
+  currentDeliverOrderId = id;
+  document.getElementById("deliverModal").style.display = "flex";
+}
+
+// CLOSE DELIVER MODAL
+window.closeDeliverModal = function(){
+  document.getElementById("deliverModal").style.display = "none";
+}
+
+// CONFIRM DELIVERY
+window.confirmDeliver = async function(){
+  const deliveredDate = document.getElementById("deliveredDate").value;
+  if(!deliveredDate){
+    toast("Please select a delivered date");
+    return;
+  }
+
+  await updateDoc(doc(db,"Orders",currentDeliverOrderId),{
+    status:"Delivered",
+    deliveredDate: deliveredDate
+  });
+
+  toast("Order Delivered");
+  closeDeliverModal();
+  loadOrders();
+}
+
+/* CHART */
+
+function createChart(revenue){
+
+  if(chartInstance) chartInstance.destroy();
+
+
+
+  chartInstance = new Chart(document.getElementById("revenueChart"),{
+
+    type:"bar",
+
+    data:{
+
+      labels:["Revenue"],
+
+      datasets:[{
+
+        label:"Revenue",
+
+        data:[revenue]
+
+      }]
+
+    }
+
+  });
+
+}
+
+
+
+loadProducts();
+
+loadOrders();
+
+window.approveCancel = async function(id){
+  const orderRef = doc(db,"Orders",id);
+  const orderSnap = await getDoc(orderRef);
+  const data = orderSnap.data();
+
+  let newStatus = "Cancelled";
+  if(data.paymentMethod === "UPI"){
+    newStatus = "Refunded"; // for online payment
+  }
+
+  await updateDoc(orderRef,{
+    status: newStatus,
+    cancelRequest: false
+  });
+
+  toast(`Order ${newStatus}`);
+  loadOrders(); // refresh table
+}
+
+  
+</script>
+  
+<!-- DELIVER MODAL -->
+<div id="deliverModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:rgba(0,0,0,0.5); justify-content:center; align-items:center;">
+  <div style="background:white; padding:20px; border-radius:10px; width:300px; display:flex; flex-direction:column; gap:10px;">
+    <h3>Mark as Delivered</h3>
+    <label>Delivered Date</label>
+    <input type="date" id="deliveredDate">
+    <button class="green" onclick="confirmDeliver()">Confirm</button>
+    <button class="red" onclick="closeDeliverModal()">Cancel</button>
+  </div>
+</div>
+  
+</body>
+
+</html>

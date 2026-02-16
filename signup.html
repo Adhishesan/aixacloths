@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up | VXIV</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:Arial,sans-serif;
+    background:#fff;
+    color:black;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    height:100vh;
+  }
+  h1{
+    font-size:36px;
+    margin-bottom:30px;
+    transform:rotate(180deg); /* VXIV rotated to look like AIXA */
+  }
+  .form-container{
+    width:90%;
+    max-width:400px;
+    background:#fff;
+    padding:30px;
+    border-radius:15px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    display:flex;
+    flex-direction:column;
+    gap:20px;
+  }
+  .input-wrapper{
+    width:100%;
+    position:relative;
+  }
+  .input-wrapper input{
+    width:100%;
+    padding:12px 40px 12px 10px;
+    font-size:14px;
+    border-radius:8px;
+    border:1px solid #ccc;
+    box-sizing:border-box;
+  }
+  button{
+    padding:12px;
+    font-size:16px;
+    border:none;
+    border-radius:25px;
+    background:black;
+    color:white;
+    cursor:pointer;
+    transition:0.3s;
+  }
+  button:hover{opacity:0.85;}
+  p{text-align:center;font-size:14px;}
+  a{text-decoration:none;color:black;font-weight:bold;}
+
+  .toast {
+    visibility: hidden;
+    min-width: 250px;
+    background-color: #333;
+    color: #fff;
+    text-align: center;
+    border-radius: 8px;
+    padding: 16px;
+    position: fixed;
+    z-index: 9999;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 30px;
+    font-size: 16px;
+    opacity: 0;
+    transition: opacity 0.5s, bottom 0.5s;
+  }
+  .toast.show {
+    visibility: visible;
+    opacity: 1;
+    bottom: 50px;
+  }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<h1>VXIV</h1>
+
+<div class="form-container">
+  <div class="input-wrapper">
+    <input type="email" id="email" placeholder="Email">
+  </div>
+
+  <div class="input-wrapper">
+    <input type="password" id="password" placeholder="Password">
+    <!-- Eye icon -->
+    <svg id="togglePassword" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20"
+         style="position:absolute; right:10px; top:50%; transform:translateY(-50%); cursor:pointer; fill:#555;">
+      <path d="M12 5C7 5 2.73 8.11 1 12c1.73 3.89 6 7 11 7s9.27-3.11 11-7c-1.73-3.89-6-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10z"/>
+      <circle cx="12" cy="12" r="2.5"/>
+    </svg>
+  </div>
+
+  <button id="signupBtn">Sign Up</button>
+  <button id="googleSignup" style="background:#fff;color:black;border:1px solid #ccc;">
+    Sign Up with Google
+  </button>
+
+  <p>Already have an account? <a href="login.html">Login here</a></p>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+import { 
+  getAuth, 
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCrnSZiYKQtWhnz4cNKdjBo0lWuQGYuimI",
+  authDomain: "aixa-store.firebaseapp.com",
+  projectId: "aixa-store",
+  storageBucket: "aixa-store.appspot.com",
+  messagingSenderId: "950338552111",
+  appId: "1:950338552111:web:2bd549406709e48d47a1da"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const provider = new GoogleAuthProvider();
+
+// Toast function
+function showToast(message){
+  const toast = document.getElementById("toast");
+  toast.innerText = message;
+  toast.className = "toast show";
+  setTimeout(()=>{ toast.className = "toast"; }, 3000);
+}
+
+// Password toggle
+const passwordInput = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+togglePassword.addEventListener("click", ()=>{
+  passwordInput.type = passwordInput.type === "password" ? "text" : "password";
+});
+
+// Signup button
+document.getElementById("signupBtn").addEventListener("click", ()=>{
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+
+  if(!email || !password){
+    showToast("Please enter email and password");
+    return;
+  }
+
+  createUserWithEmailAndPassword(auth,email,password)
+    .then(()=>{
+      showToast("Account created successfully! You can login now.");
+      setTimeout(()=> window.location.href="login.html",1000);
+    })
+    .catch((error)=>{
+      showToast("Error: "+error.message);
+    });
+});
+
+// Google Signup
+document.getElementById("googleSignup").addEventListener("click", async ()=>{
+  try{
+    const result = await signInWithPopup(auth,provider);
+    const user = result.user;
+    showToast("Account created successfully with Google!");
+    setTimeout(()=> window.location.href="index.html",1000);
+  }catch(error){
+    showToast("Google signup failed: "+error.message);
+  }
+});
+</script>
+
+</body>
+</html>
