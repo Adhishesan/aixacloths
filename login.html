@@ -302,23 +302,11 @@ document.getElementById("loginBtn").addEventListener("click", () => {
 });
 
 // Google Login
-document.getElementById("googleLogin").addEventListener("click", () => {
+document.getElementById("googleLogin").addEventListener("click", () => 
   {
     signInWithRedirect(auth, provider);
   });
 
-    if(user.email === "aixa.hqs@gmail.com"){
-      showToast("Admin login successful");
-      setTimeout(() => window.location.href = "admin.html", 1000);
-    } else {
-      showToast("Login successful");
-      setTimeout(() => window.location.href = "index.html", 1000);
-    }
-
-  } catch (error) {
-    showToast("Google login failed: " + error.message);
-  }
-});
 
 </script>
 
