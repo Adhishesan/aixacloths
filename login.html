@@ -207,7 +207,8 @@
   getAuth, 
   signInWithEmailAndPassword,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithRedirect,
+    getRedirectResult
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 
@@ -239,6 +240,25 @@
   const auth = getAuth(app);
   
   const provider = new GoogleAuthProvider();
+
+  // Handle Google Redirect Result
+getRedirectResult(auth)
+  .then((result) => {
+    if (result) {
+      const user = result.user;
+
+      if (user.email === "aixa.hqs@gmail.com") {
+        showToast("Admin login successful");
+        setTimeout(() => window.location.href = "admin.html", 1000);
+      } else {
+        showToast("Login successful");
+        setTimeout(() => window.location.href = "index.html", 1000);
+      }
+    }
+  })
+  .catch((error) => {
+    showToast("Google login failed: " + error.message);
+  });
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -282,10 +302,10 @@ document.getElementById("loginBtn").addEventListener("click", () => {
 });
 
 // Google Login
-document.getElementById("googleLogin").addEventListener("click", async () => {
-  try {
-    const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+document.getElementById("googleLogin").addEventListener("click", () => {
+  {
+    signInWithRedirect(auth, provider);
+  });
 
     if(user.email === "aixa.hqs@gmail.com"){
       showToast("Admin login successful");
