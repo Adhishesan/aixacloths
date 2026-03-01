@@ -104,10 +104,7 @@
   </div>
 
   <button id="signupBtn">Sign Up</button>
-  <button id="googleSignup" style="background:#fff;color:black;border:1px solid #ccc;">
-    Sign Up with Google
-  </button>
-
+ 
   <p>Already have an account? <a href="login.html">Login here</a></p>
 </div>
 
@@ -117,8 +114,6 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebas
 import { 
   getAuth, 
   createUserWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -132,7 +127,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const provider = new GoogleAuthProvider();
+
 
 // Toast function
 function showToast(message){
@@ -169,17 +164,6 @@ document.getElementById("signupBtn").addEventListener("click", ()=>{
     });
 });
 
-// Google Signup
-document.getElementById("googleSignup").addEventListener("click", async ()=>{
-  try{
-    const result = await signInWithPopup(auth,provider);
-    const user = result.user;
-    showToast("Account created successfully with Google!");
-    setTimeout(()=> window.location.href="index.html",1000);
-  }catch(error){
-    showToast("Google signup failed: "+error.message);
-  }
-});
 </script>
 
 </body>
