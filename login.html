@@ -180,10 +180,6 @@
 </div>
 
   <button id="loginBtn">Login</button>
-  
-  <button id="googleLogin" style="background:#fff;color:#000;border:1px solid #ccc;">
-  Login with Google
-</button>
 
   <p style="margin-top:15px;font-size:14px;color:#555;">
 
@@ -206,9 +202,6 @@
   import { 
   getAuth, 
   signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithRedirect,
-    getRedirectResult
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
 
 
@@ -238,27 +231,6 @@
   const app = initializeApp(firebaseConfig);
 
   const auth = getAuth(app);
-  
-  const provider = new GoogleAuthProvider();
-
-  // Handle Google Redirect Result
-getRedirectResult(auth)
-  .then((result) => {
-    if (result) {
-      const user = result.user;
-
-      if (user.email === "aixa.hqs@gmail.com") {
-        showToast("Admin login successful");
-        setTimeout(() => window.location.href = "admin.html", 1000);
-      } else {
-        showToast("Login successful");
-        setTimeout(() => window.location.href = "index.html", 1000);
-      }
-    }
-  })
-  .catch((error) => {
-    showToast("Google login failed: " + error.message);
-  });
 
 function showToast(message) {
   const toast = document.getElementById("toast");
@@ -300,12 +272,6 @@ document.getElementById("loginBtn").addEventListener("click", () => {
       showToast("Login failed: " + error.message);
     });
 });
-
-// Google Login
-document.getElementById("googleLogin").addEventListener("click", () => 
-  {
-    signInWithRedirect(auth, provider);
-  });
 
 
 </script>
