@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -459,7 +458,7 @@ svg{stroke:black;stroke-width:1.3;fill:none;width:26px;height:26px;display:block
   border-right: 4px solid #000;  /* Black tick */
   border-bottom: 4px solid #000;
   transform: rotate(45deg);
-  translateY(-10px);
+  translate:(-10px);
   animation: drawTick 0.5s ease forwards;
 }
 
@@ -702,7 +701,18 @@ import {
   onAuthStateChanged,
   signOut,
 } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs,
+  getDoc, 
+  addDoc, 
+  query, 
+  where, 
+  orderBy,
+  doc,
+  updateDoc
+} from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 const firebaseConfig = {
   apiKey: "AIzaSyCrnSZiYKQtWhnz4cNKdjBo0lWuQGYuimI",
   authDomain: "aixa-store.firebaseapp.com",
@@ -745,6 +755,7 @@ function renderProducts(products){
     const name = p.name || "No name";
     const desc = p.description || "";
     const price = p.price || "0";
+    const stock = p.stock ?? 0;
     const image = p.image1 || "https://via.placeholder.com/400x300?text=No+image";
 
     const card=document.createElement("div");
@@ -756,8 +767,18 @@ function renderProducts(products){
         <button class="plus-btn">+</button>
       </div>
       <h3>${name}</h3>
-     
-      <div class="price">Rs.${price}</div>
+
+<div class="price">Rs.${price}</div>
+
+<div style="font-size:13px;margin-left:5px;">
+${
+stock === 0
+? '<span style="color:red;">Out of Stock</span>'
+: stock <= 5
+? `<span style="color:#ff6a00;">Only few left</span>`
+: ''
+}
+</div>
     `;
 
     section.appendChild(card);
@@ -808,13 +829,15 @@ function openFullView(product){
     if(existing){
         existing.qty += 1;
     } else {
-        cart.push({
-            name: product.name,
-            desc: product.description,
-            price: product.price,
-            image: product.image1,
-            qty: 1
-        });
+       cart.push({
+    id: product.id,
+    name: product.name,
+    desc: product.description,
+    price: product.price,
+    image: product.image1,
+    stock: product.stock,
+    qty: 1
+});
     }
 
     showToast("Item added to cart!");
@@ -836,6 +859,11 @@ closeProductPopup.addEventListener("click", ()=>{
 
     card.querySelector(".plus-btn").addEventListener("click", (event) => {
   event.stopPropagation();
+  
+  if(stock === 0){
+  showToast("Out of stock");
+  return;
+}
 
   const user = auth.currentUser;
 
@@ -851,12 +879,15 @@ closeProductPopup.addEventListener("click", ()=>{
     existing.qty += 1;
   } else {
     cart.push({
-      name,
-      desc,
-      price,
-      image,
-      qty: 1
-    });
+  id: p.id,
+  name,
+  desc,
+  price,
+  image,
+  stock,
+  qty: 1
+});
+
   }
 
   showToast("Item added to cart!");
@@ -1069,47 +1100,62 @@ document.getElementById("placeOrder").addEventListener("click", async () => {
     }
 
     // ---------- PLACE ORDER ----------
-    const loading = document.getElementById("orderLoadingPopup");
-    loading.style.display = "flex";
+const loading = document.getElementById("orderLoadingPopup");
+loading.style.display = "flex";
 
-    const total = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
-    const user = auth.currentUser;
-    const orderId = "AIXA-" + Date.now();
+const total = cart.reduce((sum, item) => sum + Number(item.price) * item.qty, 0);
+const user = auth.currentUser;
+const orderId = "AIXA-" + Date.now();
 
-    try {
-        await addDoc(collection(db, "Orders"), {
-            orderId: orderId,
-            userEmail: user.email,
-            name,
-            address,
-            pincode,
-            city,
-            mobile,
-            paymentMethod: payment,
-            items: cart,
-            total: total,
-            status: "Processing",
-            cancelRequest: false,
-            createdAt: new Date()
-        });
+try {
 
-        // Clear cart
-        cart = [];
-        renderCart();
+    // 🔥 Reduce stock first
+for (const item of cart) {
 
-        // Hide loading
-        loading.style.display = "none";
+    const productRef = doc(db, "Products", item.id);
 
-        // Close checkout popup
-        checkoutPopup.style.display = "none";
+    const productSnap = await getDoc(productRef);
+    const currentStock = productSnap.data().stock;
 
-        // Show success animation
-        showOrderSuccess();
+    const newStock = currentStock - item.qty;
 
-    } catch (error) {
-        loading.style.display = "none";
-        alert("Something went wrong!");
-    }
+    await updateDoc(productRef, {
+      stock: newStock < 0 ? 0 : newStock
+    });
+
+}
+
+    // 🔥 Then create order
+    await addDoc(collection(db, "Orders"), {
+        orderId: orderId,
+        userEmail: user.email,
+        name,
+        address,
+        pincode,
+        city,
+        mobile,
+        paymentMethod: payment,
+        items: cart,
+        total: total,
+        status: "Processing",
+        cancelRequest: false,
+        createdAt: new Date()
+    });
+
+    // 🔥 Now clear cart
+    cart = [];
+    renderCart();
+
+    loading.style.display = "none";
+    checkoutPopup.style.display = "none";
+
+    showOrderSuccess();
+
+} catch (err) {
+  console.error(err);
+  showToast(err.message);
+}
+
 
 }); 
 
@@ -1383,12 +1429,13 @@ let cancelledDate = order.cancelledDate || "";
     `;
   }
  
-  timelineHTML += `
-    <div class="timeline-step">
+ timelineHTML += `
+    <div class="timeline-step ${step === order.status ? 'active' : ''} ${step === 'Cancelled' && order.status === 'Cancelled' ? 'cancelled' : ''}">
       <div>${step}</div>
       ${stepHTML}
     </div>
-  `;
+`;
+  
 });
 
   timelineHTML += `</div>`;
@@ -1425,6 +1472,19 @@ let cancelledDate = order.cancelledDate || "";
     </div>
   `;
 
+  content.innerHTML = `
+    <div class="order-details-card">
+      ${itemsHTML}
+      ${timelineHTML}
+      <div class="address-box">
+        <strong>Shipping Address:</strong><br>
+        ${order.name}<br>
+        ${order.address}, ${order.city} - ${order.pincode}<br>
+        Mobile: ${order.mobile}
+      </div>
+    </div>
+  `;
+
 setTimeout(()=>{
   const progress = document.getElementById("progressLine");
   const stepsElements = document.querySelectorAll(".timeline-step");
@@ -1457,8 +1517,6 @@ setTimeout(()=>{
 },100);
  
 }
- import { doc, updateDoc } from
-"https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 window.requestCancel = async function(orderId){
 
@@ -1500,6 +1558,3 @@ history.pushState({ view: "orders" }, "", "#orders");
 </script>
 </body>
 </html>
-
-
-
