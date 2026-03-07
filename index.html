@@ -814,7 +814,20 @@ function openFullView(product){
 
     // Add button functionality
     const addBtn = document.getElementById("fullViewAddBtn");
-    addBtn.onclick = function(){
+
+  // ✅ ADD THE STOCK CHECK HERE
+    if(product.stock === 0){
+        addBtn.innerText = "Out of Stock";
+        addBtn.disabled = true;
+        addBtn.style.background = "grey";
+    }
+
+   addBtn.onclick = function(){
+
+    if(product.stock === 0){
+        showToast("Out of stock");
+        return;
+    }
 
     const user = auth.currentUser;
 
@@ -830,14 +843,14 @@ function openFullView(product){
         existing.qty += 1;
     } else {
        cart.push({
-    id: product.id,
-    name: product.name,
-    desc: product.description,
-    price: product.price,
-    image: product.image1,
-    stock: product.stock,
-    qty: 1
-});
+        id: product.id,
+        name: product.name,
+        desc: product.description,
+        price: product.price,
+        image: product.image1,
+        stock: product.stock,
+        qty: 1
+       });
     }
 
     showToast("Item added to cart!");
