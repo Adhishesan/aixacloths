@@ -705,7 +705,8 @@ import {
   getFirestore, 
   collection, 
   getDocs,
-  getDoc, 
+  getDoc,
+  setDoc, 
   addDoc, 
   query, 
   where, 
@@ -815,6 +816,11 @@ function openFullView(product){
     // Add button functionality
     const addBtn = document.getElementById("fullViewAddBtn");
 
+
+    addBtn.disabled = false;
+addBtn.innerText = "Add to Cart";
+addBtn.style.background = "black";
+
   // ✅ ADD THE STOCK CHECK HERE
     if(product.stock === 0){
         addBtn.innerText = "Out of Stock";
@@ -904,11 +910,26 @@ closeProductPopup.addEventListener("click", ()=>{
   }
 
   showToast("Item added to cart!");
+  saveCartToFirebase();
 });
   });
 }
 
 let cart = [];
+
+async function saveCartToFirebase(){
+
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const cartRef = doc(db,"carts",user.email);
+
+  await setDoc(cartRef,{
+    items: cart
+  });
+
+}
+
 function renderCart(){
   const section=document.getElementById("cartSection");
   const footer=document.getElementById("cartFooter");
@@ -921,11 +942,15 @@ function renderCart(){
     div.className="cart-item";
     div.innerHTML=`<div class="cart-info"><img src="${item.image}"><div class="cart-text"><h4>${item.name}</h4><p>${item.desc}</p><div class="price">₹${item.price}</div><div class="quantity-controls"><button class="decrease">-</button><span class="qty">${item.qty}</span><button class="increase">+</button></div></div></div><button class="remove-btn">Remove</button>`;
     section.appendChild(div);
-    div.querySelector(".increase").addEventListener("click",()=>{item.qty+=1;renderCart();});
-    div.querySelector(".decrease").addEventListener("click",()=>{if(item.qty>1)item.qty-=1;else cart.splice(index,1);renderCart();});
-    div.querySelector(".remove-btn").addEventListener("click",()=>{cart.splice(index,1);renderCart();});
+    div.querySelector(".increase").addEventListener("click",()=>{item.qty+=1;saveCartToFirebase();renderCart();});
+    div.querySelector(".decrease").addEventListener("click",()=>{if(item.qty>1)item.qty-=1;else cart.splice(index,1);saveCartToFirebase();renderCart();});
+    div.querySelector(".remove-btn").addEventListener("click",()=>{cart.splice(index,1);saveCartToFirebase();renderCart();});
   });
+  
+  if(cartSection.style.display === "flex"){
   footer.style.display="flex";
+}
+
   footer.querySelector(".total").textContent=`Total: ₹${total}`;
 }
 
@@ -1157,6 +1182,7 @@ for (const item of cart) {
 
     // 🔥 Now clear cart
     cart = [];
+    saveCartToFirebase();
     renderCart();
 
     loading.style.display = "none";
@@ -1221,7 +1247,7 @@ document.getElementById("profileAboutBtn").addEventListener("click",()=>{
 });
  
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
   const emailText = document.getElementById("userEmail");
   const loginBtn = document.getElementById("loginBtn");
@@ -1231,6 +1257,15 @@ onAuthStateChanged(auth, (user) => {
     emailText.innerText = user.email;
     loginBtn.style.display = "none";
     logoutBtn.style.display = "block";
+
+const cartRef = doc(db,"carts",user.email);
+const cartSnap = await getDoc(cartRef);
+
+if(cartSnap.exists()){
+  cart = cartSnap.data().items || [];
+  renderCart();
+}
+
   }else{
     emailText.innerText = "Not Logged In";
     loginBtn.style.display = "block";
