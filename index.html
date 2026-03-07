@@ -1049,6 +1049,8 @@ if(!user){
     document.getElementById("ordersSection").style.display = "block";
 
     loadUserOrders();
+    
+    history.pushState({ view: "orders" }, "", "#orders");
 }
  
 /* Bottom Navigation */
@@ -1600,7 +1602,33 @@ history.pushState({ view: "orders" }, "", "#orders");
   }, 2500);
 }
  
+window.addEventListener("popstate", (event) => {
 
+  const view = event.state?.view;
+
+  if(view === "home"){
+    showHomeView();
+  }
+  else if(view === "search"){
+    showSearchView();
+  }
+  else if(view === "cart"){
+    showCartView();
+  }
+  else if(view === "menu"){
+    showMenuView();
+  }
+  else if(view === "profile"){
+    showProfileView();
+  }
+  else if(view === "orders"){
+    showOrdersView();
+  }
+  else{
+    showHomeView();
+  }
+
+});
  
  
 </script>
