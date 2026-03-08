@@ -62,6 +62,24 @@ body{font-family:Arial,sans-serif;background:#fff;overflow-x:hidden;}
 .bottom-bar{position:fixed;bottom:0;width:100%;height:50px;background:white;border-top:1px solid #ddd;display:flex;justify-content:space-around;align-items:center;z-index:100;}
 .nav-item{display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;}
 svg{stroke:black;stroke-width:1;fill:none;width:20px;height:20px;display:block;}
+/* Make bottom nav bar text smaller and aligned */
+.bottom-bar .nav-item {
+  font-size: 12px;        /* smaller text for MENU & ACCOUNT */
+  padding: 2px 0;         /* reduce top/bottom space */
+  line-height: 1;          /* tight spacing */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* MENU and ACCOUNT text medium weight */
+.bottom-bar #menuIcon,
+.bottom-bar #profileIcon {
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
 
 /* Toast */
 .toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:black;color:white;padding:10px 20px;border-radius:25px;font-size:14px;opacity:0;transition:opacity 0.5s ease;z-index:2000;}
@@ -708,8 +726,10 @@ border-radius:10px;
   <!-- Live Search Icon -->
 <div class="nav-item" id="searchIcon">
   <svg viewBox="0 0 64 64" class="live-search">
-    <circle class="circle" cx="28" cy="28" r="12" fill="none" stroke="black" stroke-width="3"/>
-    <line class="handle" x1="36" y1="36" x2="50" y2="50" stroke="black" stroke-width="3" stroke-linecap="round"/>
+    <!-- Bigger magnifying glass circle -->
+    <circle class="circle" cx="28" cy="28" r="28" fill="none"/>
+    <!-- Small handle -->
+    <line class="handle" x1="40" y1="40" x2="48" y2="48"/>
   </svg>
 </div>
 
@@ -727,18 +747,18 @@ border-radius:10px;
 
 /* Handle animation */
 .handle {
-  transform-origin: 36px 36px;
+  transform-origin: 40px 40px;
   opacity: 0; /* initially hidden */
   animation: handleAnim 10s infinite;
 }
 
 /* Circle morphing animation */
 @keyframes searchAnim {
-  0%, 10% { r:12; stroke-dasharray: 0; transform: rotate(0deg); }    /* normal search */
+  0%, 10% { r:18; stroke-dasharray: 0; transform: rotate(0deg); }    /* normal search */
   20% { r:20; transform: rotate(0deg); }                              /* expand circle */
   40% { transform: rotate(720deg); }                                   /* 2 rotations */
   50%, 80% { r:20; stroke-dasharray: 3 6; }                            /* dotted circle pause */
-  90%, 100% { r:12; stroke-dasharray: 0; transform: rotate(0deg); }   /* back to search icon */
+  90%, 100% { r:18; stroke-dasharray: 0; transform: rotate(0deg); }   /* back to search icon */
 }
 
 /* Handle rotates and shows only during search icon state */
