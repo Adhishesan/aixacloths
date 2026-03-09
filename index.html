@@ -1135,7 +1135,7 @@ function renderCart(){
 });
 
     div.querySelector(".decrease").addEventListener("click",()=>{if(item.qty>1)item.qty-=1;else cart.splice(index,1);saveCartToFirebase();  updateCartCount(); renderCart();});
-    div.querySelector(".remove-btn").addEventListener("click",()=>{cart.splice(index,1);saveCartToFirebase();renderCart();});
+    div.querySelector(".remove-btn").addEventListener("click",()=>{cart.splice(index,1);saveCartToFirebase(); updateCartCount(); renderCart();});
   });
   
   if(cartSection.style.display === "flex"){
